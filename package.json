@@ -1,0 +1,27 @@
+{
+  "name": "discordbot",
+  "version": "0.1.0",
+  "description": "A Discord bot. Fam.",
+  "repository": {
+    "type": "git",
+    "url": "https://bitbucket.org/PrimordialHelios/edbot.git"
+  },
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "test": "node test.js"
+  },
+  "author": "",
+  "license": "MIT/Expat",
+  "dependencies": {
+    "bufferutil": "^3.0.5",
+    "discord.js": "^11.2.1",
+    "erlpack": "github:discordapp/erlpack",
+    "libsodium-wrappers": "^0.7.3",
+    "node-opus": "^0.2.9",
+    "opusscript": "0.0.6",
+    "sodium": "github:paixaop/node-sodium",
+    "sqlite3": "^4.0.6",
+    "uws": "^9.148.0"
+  }
+}
