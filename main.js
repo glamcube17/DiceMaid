@@ -34,15 +34,19 @@ var prefix = config.prefix;
 
 var functions = require(path.join(__dirname,'functions.js'));
 
-const sqlite = require('sqlite3');//.verbose();
-var db = new sqlite.Database(__dirname+'/dmdbase.db',
-    (e)=>{if(e){return console.error(e.message);}console.log('Opened database');});
-db = functions.prototypeDatabase(db); //give it some functions from SO so it works - @todo this is probably bad??
-functions.db = db;
+// legends say this is the regex with which the Norse gods will shatter the Bifrost and bring about the end of the world
+// if you're trying to make sense of it, I'm so sorry
+var diceregex = /(\d+\s*)?d\s*(\d+)(!)?(?:(\(?k\d+\-?[LH]?\)?)|\-(L|H))?(\s*[x\*\/]\s*\d+)?(\s*[\+\-]\s*\d+(?!\s*d\s*\d))?/gi;
+
+// const sqlite = require('sqlite3');//.verbose();
+// var db = new sqlite.Database(__dirname+'/dmdbase.db',
+    // (e)=>{if(e){return console.error(e.message);}console.log('Opened database');});
+// db = functions.prototypeDatabase(db); //give it some functions from SO so it works - @todo this is probably bad??
+// functions.db = db;
 
 const helpstring = "Commands:\n"
                   +"`!help [command]` - print this message or more information about specific command\n"
-                  +"`!roll AdBxC+D` - roll dice as specified in dice notation\n"
+                  +"`!roll AdBxC+D` - roll dice as specified in dice notation - see !help roll for more info\n"
 const helpdict = {
     "help": "Yes, you're very clever",
     "roll": "Evaluates and rolls an expression in dice notation, AdBxC+D.\n"
@@ -81,20 +85,19 @@ client.on('message', async message => {
     }
     // if( (config.isTestInstance) != (message.channel.id == config.testChannel) ){ return; }
 	
-	if (message.content.toLowerCase().includes(`${prefix}roll`)){
+	if(message.content.toLowerCase().includes(`${prefix}roll`)){
         //get an array of each valid dice notation expression in the message, as discerned by this MONSTER REGEX
-        // legends say this is the regex with which the Norse gods will shatter the Bifrost and bring about the end of the world
-        // if you're trying to make sense of it, I'm so sorry
-        let exprarr = message.content.match(
-                /(\d+\s*)?d\s*(\d+)(!)?(?:(\(?k\d+\-?[LH]?\)?)|\-(L|H))?(\s*[x\*\/]\s*\d+)?(\s*[\+\-]\s*\d+(?!\s*d\s*\d))?/gi
-            );
+       
+        let exprarr = message.content.match(diceregex);
         console.log(exprarr);
         if(!exprarr){ message.reply("Roll what? (Try `!help roll` if you're confused)"); }
         else{
             let results = '';
             for(let i = 0; i < exprarr.length; i++){
                 let expr = exprarr[i].trim();
-                results += '\n' + functions.rollDice(expr)[1];
+                // results += '\n' + functions.rollDice(expr)[1];
+                results += functions.rollDice(expr)[1];
+				if(i+1 < exprarr.length){ results += '\n'; }
             }
             message.reply(results);
         }
@@ -124,28 +127,6 @@ client.on('message', async message => {
                 }
             }
         }
-    }
-    
-    //                                   //separate out accents/etc  //strip accents  //common words       //uwu umu nwn owo ono
-    else if( message.content.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]|own|now|nnn|ooo/g, '').match(/\b[uno][wmn][uno]\b/)){ //strip accents
-        (async function(message){ //hack so I can use await instead of callback hell
-            let uwu = client.emojis.find(emoji => emoji.name === 'uwu');
-            message.react(`${uwu ? uwu.id : '⛎'}`);
-            let user = message.author.id;
-            let q1 = await db.getAsync(`SELECT uwus FROM Uwu WHERE uid == ${user}`);
-            let uwus = ( q1 ? q1.uwus : 0 ) + 1;
-            await db.runAsync(`INSERT OR REPLACE INTO Uwu(uid, uwus) VALUES (${user},${uwus})`); //I wanted to use upsert but nooo
-            let q2 = await db.getAsync(`SELECT SUM(uwus) AS sum FROM Uwu`); //should never be undefined since we just inserted a row
-            let total = ( q2 ? q2.sum : -1 );
-            let override = ( /.*(69|420).*/.test( uwus+' '+total ) ); //check for funny numbers
-            if( (Math.random() < 0.1) || override ){
-                let msg = `uwu detected. You have uwu'd ${uwus} times so far. Total uwus logged: ${total}.`;
-                if(override){ msg += "\nowo it's the "+( (uwus+' '+total).includes('69') ? 'sex' : 'weed' )+" number!!" }
-                message.reply(msg);
-            }
-            await message.react(`${uwu ? uwu.id : '⛎'}`); //make sure it's resolved by now
-            message.reactions.first().remove(client.user);
-        })(message);
     }
     else if (message.content.toLowerCase() === 'does the black moon howl?') {
         message.reply('Only when day breaks');

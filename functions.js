@@ -45,7 +45,17 @@ exports.rollDice = function (expr){
     }
     
     let exploding = /d(\d+)!/.test(expr);
-    if(exploding && size <= 1){ exploding = false; } //that would be bad
+    // if(exploding && size <= 1){ exploding = false; } //that would be bad
+    if(exploding && size <= 1){
+        let outstr = expr + ': [ 1 + 1 + 1 + ... ]';
+            if(mult != 1){
+            if(!_divi){ outstr += ' x '+mult; }
+            else{ outstr += ' / ' + Math.round(1/mult); }
+        }
+        if(modi != 0){ outstr += ( mult>0 ? ' + '+modi : ' - '+(modi*-1) ); } //space between sign and number
+        outstr += ' = **∞**'
+        return [Infinity,outstr];
+    } //that would be bad
     
     let rolls = [];
     let total = 0;
@@ -53,7 +63,10 @@ exports.rollDice = function (expr){
         let roll = Math.floor(minface + Math.random() * size);
         rolls.push(roll);
         total += roll;
-        if(exploding && roll === size + minface-1){ dice++; } //increases the number of dice when max value is rolled
+        if(exploding && roll === size + minface-1){
+            dice++; //increases the number of dice when max value is rolled
+            if(_drop){ keep++; }
+        }
     }
     
     let keptrolls; //leave undefined if not dropping any rolls
@@ -77,7 +90,8 @@ exports.rollDice = function (expr){
     }
     total = Math.floor(total * mult + modi); //always round down
     //Build the string
-    let outstr = 'Rolling ' + expr + ': [ ';
+    // let outstr = 'Rolling ' + expr + ': [ ';
+    let outstr = expr + ': [ ';
     for(let i = 0; i < rolls.length; i++){
         if(keptrolls && !keptrolls[i]){ outstr += '~~'+rolls[i]+'~~'; } //strikethrough rolls that were dropped
         else{ outstr += rolls[i]; }
@@ -169,35 +183,35 @@ exports.rollDice = function (expr){
 
 
 //do database things, but with promises.
-exports.prototypeDatabase = function(db){
-    //i don't know exactly why these seem to be needed (aren't db calls inherently async?) but it makes it work so *shrugs*
-    db.getAsync = function (sql) {
-        let that = this;
-        return new Promise(function (resolve, reject) {
-            that.get(sql, function (err, row) {
-                if(err){ reject(err); }else{ resolve(row); }
-            });
-        });
-    };
-    db.allAsync = function (sql) {
-        let that = this;
-        return new Promise(function (resolve, reject) {
-            that.all(sql, function (err, rows) {
-                if(err){ reject(err); }else{ resolve(row); }
-            });
-        });
-    };
-    db.runAsync = function (sql) {
-        let that = this;
-        return new Promise(function (resolve, reject) {
-            that.run(sql, function(err) {
-                if(err){ reject(err); }else{ resolve(); }
-            });
-        })
-    };
+// exports.prototypeDatabase = function(db){
+    // //i don't know exactly why these seem to be needed (aren't db calls inherently async?) but it makes it work so *shrugs*
+    // db.getAsync = function (sql) {
+        // let that = this;
+        // return new Promise(function (resolve, reject) {
+            // that.get(sql, function (err, row) {
+                // if(err){ reject(err); }else{ resolve(row); }
+            // });
+        // });
+    // };
+    // db.allAsync = function (sql) {
+        // let that = this;
+        // return new Promise(function (resolve, reject) {
+            // that.all(sql, function (err, rows) {
+                // if(err){ reject(err); }else{ resolve(row); }
+            // });
+        // });
+    // };
+    // db.runAsync = function (sql) {
+        // let that = this;
+        // return new Promise(function (resolve, reject) {
+            // that.run(sql, function(err) {
+                // if(err){ reject(err); }else{ resolve(); }
+            // });
+        // })
+    // };
     
-    return db;
-}
+    // return db;
+// }
 
 
 
